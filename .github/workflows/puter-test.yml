@@ -1,0 +1,31 @@
+name: puter-test
+on:
+  workflow_dispatch:
+    inputs:
+      voices:
+        description: "Gemini voices to try via Puter (comma separated)"
+        default: "Puck,Charon"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install Puter.js
+        run: |
+          echo '{"type":"module"}' > package.json
+          npm i @heyputer/puter.js
+      - name: Make the voice samples
+        run: node puter_test.mjs
+        env:
+          PUTER_AUTH_TOKEN: ${{ secrets.PUTER_AUTH_TOKEN }}
+          VOICES: ${{ github.event.inputs.voices }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: puter-samples
+          path: puter-samples
+          if-no-files-found: ignore
